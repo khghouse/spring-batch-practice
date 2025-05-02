@@ -1,9 +1,11 @@
 pipeline {
     agent any
 
+    /**
     environment {
         DOTENV = credentials('spring-batch-env')
     }
+   */
 
     stages {
         stage('Checkout') {
@@ -19,6 +21,12 @@ pipeline {
         }
 
         stage('Build and Run with Docker Compose') {
+            withCredentials([file(credentialsId: 'spring-batch-env-file', variable: 'DOTENV_FILE')]) {
+                sh 'cp "$DOTENV_FILE" .env'
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d --build'
+            }
+            /**
             steps {
                 script {
                     writeFile file: '.env', text: "${DOTENV}"
@@ -26,6 +34,7 @@ pipeline {
                 sh 'docker-compose down || true'
                 sh 'docker-compose up -d --build'
             }
+            */
         }
     }
 }

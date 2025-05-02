@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: springboot-app
+    env_file:
+      - .env
     image: springboot-app-image
     ports:
       - "8081:8080"
