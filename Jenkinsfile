@@ -21,6 +21,7 @@ pipeline {
         stage('Build and Run with Docker Compose') {
             steps {
                 script {
+                    sh 'rm -f .env'
                     sh 'cp $DOTENV_FILE .env'
                 }
                 sh 'docker-compose down || true'
