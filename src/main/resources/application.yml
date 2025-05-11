@@ -5,7 +5,15 @@ spring:
   profiles:
     active: local
 
---- # 프로파일을 구분
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        ddl-auto: none
+  defer-datasource-initialization: true
+
+--- # local
 
 spring:
   config:
@@ -13,7 +21,7 @@ spring:
       on-profile: local # 해당 프로파일이 선택되었을 때만 활성화
 
   datasource:
-    url: jdbc:h2:mem:practice
+    url: jdbc:h2:mem:practice;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -21,17 +29,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-    defer-datasource-initialization: true
 
   h2:
     console:
       enabled: true
 
----
+  batch:
+    job:
+      enabled: false # 자동 실행 방지
+    jdbc:
+      initialize-schema: always
+
+--- # test
 
 spring:
   config:
@@ -47,16 +56,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
 
-  sql:
-    init:
-      mode: never
+  h2:
+    console:
+      enabled: true
 
----
+  batch:
+    job:
+      enabled: false # 자동 실행 방지
+    jdbc:
+      initialize-schema: always
+
+--- # dev
 
 spring:
   config:
@@ -72,7 +83,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+
+  sql:
+    init:
+      mode: never
