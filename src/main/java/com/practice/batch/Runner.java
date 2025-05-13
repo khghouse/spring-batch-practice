@@ -16,6 +16,7 @@ public class Runner implements CommandLineRunner {
 
     private final JobLauncher jobLauncher;
     private final Job helloJob;
+    private final Job customerJob;
 
     @Override
     public void run(String... args) throws Exception {
@@ -24,6 +25,7 @@ public class Runner implements CommandLineRunner {
                 .toJobParameters();
 
         jobLauncher.run(helloJob, jobParameters);
+        jobLauncher.run(customerJob, jobParameters);
     }
 
 }

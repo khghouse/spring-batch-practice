@@ -1,0 +1,74 @@
+package com.practice.batch.config;
+
+import com.practice.batch.entity.Customer;
+import jakarta.persistence.EntityManagerFactory;
+import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.database.JpaItemWriter;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.transaction.PlatformTransactionManager;
+
+@Configuration
+@RequiredArgsConstructor
+public class CustomerJobConfig {
+
+    private final JobRepository jobRepository;
+    private final PlatformTransactionManager transactionManager;
+    private final EntityManagerFactory entityManagerFactory;
+
+    @Bean
+    public Job customerJob() {
+        return new JobBuilder("customerJob", jobRepository)
+                .incrementer(new RunIdIncrementer())
+                .start(customerStep())
+                .build();
+    }
+
+    @Bean
+    public Step customerStep() {
+        return new StepBuilder("customerStep", jobRepository)
+                .<Customer, Customer>chunk(10, transactionManager)
+                .reader(csvReader())
+                .processor(customerProcessor())
+                .writer(jpaWriter())
+                .build();
+    }
+
+    @Bean
+    public FlatFileItemReader<Customer> csvReader() {
+        return new FlatFileItemReaderBuilder<Customer>()
+                .name("customerReader")
+                .resource(new ClassPathResource("customers.csv"))
+                .delimited()
+                .names("id", "name", "email")
+                .targetType(Customer.class)
+                .linesToSkip(1)
+                .build();
+    }
+
+    @Bean
+    public ItemProcessor<Customer, Customer> customerProcessor() {
+        return customer -> {
+            customer.setName(customer.getName().toUpperCase());
+            return customer;
+        };
+    }
+
+    @Bean
+    public JpaItemWriter<Customer> jpaWriter() {
+        JpaItemWriter<Customer> writer = new JpaItemWriter<>();
+        writer.setEntityManagerFactory(entityManagerFactory);
+        return writer;
+    }
+
+}
