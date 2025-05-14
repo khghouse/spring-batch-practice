@@ -1,5 +1,6 @@
 package com.practice.batch.config;
 
+import com.practice.batch.dto.CustomerCsvDto;
 import com.practice.batch.entity.Customer;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class CustomerJobConfig {
     @Bean
     public Step customerStep() {
         return new StepBuilder("customerStep", jobRepository)
-                .<Customer, Customer>chunk(10, transactionManager)
+                .<CustomerCsvDto, Customer>chunk(10, transactionManager)
                 .reader(csvReader())
                 .processor(customerProcessor())
                 .writer(jpaWriter())
@@ -45,23 +46,20 @@ public class CustomerJobConfig {
     }
 
     @Bean
-    public FlatFileItemReader<Customer> csvReader() {
-        return new FlatFileItemReaderBuilder<Customer>()
+    public FlatFileItemReader<CustomerCsvDto> csvReader() {
+        return new FlatFileItemReaderBuilder<CustomerCsvDto>()
                 .name("customerReader")
                 .resource(new ClassPathResource("customers.csv"))
                 .delimited()
                 .names("id", "name", "email")
-                .targetType(Customer.class)
+                .targetType(CustomerCsvDto.class)
                 .linesToSkip(1)
                 .build();
     }
 
     @Bean
-    public ItemProcessor<Customer, Customer> customerProcessor() {
-        return customer -> {
-            customer.setName(customer.getName().toUpperCase());
-            return customer;
-        };
+    public ItemProcessor<CustomerCsvDto, Customer> customerProcessor() {
+        return customer -> new Customer(customer.getId(), customer.getName().toUpperCase(), customer.getEmail());
     }
 
     @Bean
