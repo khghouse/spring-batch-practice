@@ -39,9 +39,9 @@ public class CustomerJobConfig {
     public Step customerStep() {
         return new StepBuilder("customerStep", jobRepository)
                 .<CustomerCsvDto, Customer>chunk(10, transactionManager)
-                .reader(csvReader())
-                .processor(customerProcessor())
-                .writer(jpaWriter())
+                .reader(csvReader()) // csv 파일에서 CustomerCsvDto를 읽는다.
+                .processor(customerProcessor()) // dto를 entity로 변환
+                .writer(jpaWriter()) // Customer 엔티티를 db에 저장
                 .build();
     }
 
@@ -59,7 +59,11 @@ public class CustomerJobConfig {
 
     @Bean
     public ItemProcessor<CustomerCsvDto, Customer> customerProcessor() {
-        return customer -> new Customer(customer.getId(), customer.getName().toUpperCase(), customer.getEmail());
+        return customer -> new Customer(
+                customer.getId(),
+                customer.getName().toUpperCase(),
+                customer.getEmail()
+        );
     }
 
     @Bean
